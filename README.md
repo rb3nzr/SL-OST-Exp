@@ -16,7 +16,7 @@ The purpose of method two would be to package some type of payload that does not
 ### Usage 
 + If compiling on Linux and don't have the mingw toolchain: `sudo apt install mingw-w64`
 + If you don't already have Nim installed then use [choosenim](https://github.com/dom96/choosenim)
-+ `nimble install winim, checksums, zippy, parsetoml`
++ `nimble install winim checksums zippy parsetoml`
 + `nimble install https://github.com/nbaertsch/nimvoke`
 + Edit one of the .toml config files. If using `loader.nim` for method one, there are a few hardcoded vars that need to be edited at the top of the file.
 + `pip install -r requirements.txt` 
