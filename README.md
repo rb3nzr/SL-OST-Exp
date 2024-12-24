@@ -1,37 +1,23 @@
-This project is my experimentation with a method to gain persistence on a machine through changing the target path on the [LNK/Shortcut](https://github.com/libyal/liblnk/blob/main/documentation/Windows%20Shortcut%20File%20(LNK)%20format.asciidoc) files for the User/Public desktop, startup menu, and task bar. It's a very simple POC, and there is a lot that could be added/removed. This was purely made for fun and education. 
+## About 
+This project is my experimentation with gaining persistence on a machine through swapping target paths back and forth on already existing [LNK/shortcut](https://github.com/libyal/liblnk/blob/main/documentation/Windows%20Shortcut%20File%20(LNK)%20format.asciidoc) files. The goal here is to not mess around with the startup directories, avoid creating any new .LNKs, avoid messing with arguments, and purley rely on a user clicking on a shortcut. Currently the `modifyAllLnkPaths` and `restoreOrigLnkPaths` functions in `lnks.nim` are set to target the Desktop, TaskBar, and Start Menu shortcuts. This current implementation of this was put into a reverse shell that I put together for testing and learning. There are plenty of things that could be improved upon or expanded with it. If anyone has suggestions, let me know.
 
-### General Idea
-The main goal here would require some type of payload to stay on disk, and this payload itself or another intermediate executable would change the shortcut's target paths to that payload. Once a shortcut it clicked, the original target paths have to be restored in order for the shortcut to open up the intended target, otherwise we tank all the shortcuts on the machine. The routine currently is to modify the target paths to the payload > save the original target paths to a file > delay execution for a minute or two > reset the target paths back to the payload. In example this would result in some end user clicked on a chrome shortcut, chrome doesn't open on first click, but on the second attempt it opens. If the delay window before setting the target paths back to the payload is short enough, there is a high likelihood (provided shortcuts are used on the machine) that on a shutdown or logoff event, once a user is back on the machine, we would get a connection back. 
+![](img/lnkpersist.png)
 
-### Method One
-This would be the path changing routine implemented inside some type of single payload. For testing the project contains a shellcode loader:
-
-![](img/methodone.png)
-
-### Method Two 
-The purpose of method two would be to package some type of payload that does not contian the path changing routine within it. This would require two binaries on disk (a launcher and the payload). Shortcut paths would start the launcher which would handle the path changing routine and starting the payload. For testing the project contains a simple winsock reverse shell with some options as the payload:
-
-![](img/methodtwo.png)
-
-### Usage 
-+ If compiling on Linux and don't have the mingw toolchain: `sudo apt install mingw-w64`
-+ If you don't already have Nim installed then use [choosenim](https://github.com/dom96/choosenim)
-+ `nimble install winim checksums zippy parsetoml`
+## Usage 
++ `nimble install winim checksums`
 + `nimble install https://github.com/nbaertsch/nimvoke`
-+ Edit one of the .toml config files. If using `loader.nim` for method one, there are a few hardcoded vars that need to be edited at the top of the file.
-+ `pip install -r requirements.txt` 
-+ Run the `setup.py` script
-+ For shellcode conversion: ` output/converter <.bin file> <"rc4 key">`
++ `python compile.py`
 
-#### Options if using rev_shell.nim
-Keep in mind that there is no spoofing for shell commands.
+### Reverse Shell
++ `[exit]` Exit without changing target paths
++ `[exit_persist]` Exit and set target paths back to the implant
++ `[pwsh]` Execute powershell commands through the System.Management.Automation assembly
++ `[patch]` AMSI and ETW memory patches
++ `[inject]` Spawn a remote process and inject shellcode.
++ `[start_proc]` Start a PPID spoofed process
++ `[?]` Print options
 
-+ `[pwsh]` Execute PowerShell without calling powershell.exe. Usage: `pwsh [commands]`
-+ `[patch]` AMSI and ETW memory patching
-+ `[inject]` Spawn a remote process and inject shellcode: `inject [path to bin] [shellcode str]`
-+ `[start_proc]` Start a PPID spoofed process: `start_proc [path to bin]`
-+ `[exit]` To smoothly close the connection and process
-+ `[?]` To print options
+For the `inject` command: run `converter.exe sc.bin "<key>"` >> copy output >> `[LP_SHELL] > inject C:\path\to\bin.exe <b64 blob>`
 
 ### References 
 + https://github.com/nbaertsch/nimvoke/tree/main

