@@ -38,7 +38,7 @@ def run(denim=False):
             subprocess.run(["wine", "denim.exe", "compile"] + DC_FLAGS + ["revshell.nim"])
         else:
             print(">> Compiling the revshell")
-            subprocess.run(["nim", "c"] + NC_FLAGS + ["revshell.nim"])
+            subprocess.run(["nim", "c", "-d:mingw"] + NC_FLAGS + ["revshell.nim"])
 
     else:
         converter_path = Path(__file__).parent / "converter.exe"
