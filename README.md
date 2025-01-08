@@ -36,7 +36,7 @@ A few problems with this example: If target paths are set to the implant's path 
 + `python compile.py`
 
 ## Reverse Shell
-Before tooling around with some persistence techniques regarding LNK files, I had been putting together this reverse shell as something that I can quickly compile and use on boxes with defender in CTF challenges. It works well for this at the time of writing; just use something to pack it. Credit to both [nimplant](https://github.com/chvancooten/NimPlant/tree/main) and the [offensive Nim](https://github.com/byt3bl33d3r/OffensiveNim/tree/master/src) projects, as a good amount of the code regarding the features like injection etc., came from/edited from those projects. Indirect system calls and DInvoke-style delegate declarations were done using [nimvoke](https://github.com/nbaertsch/nimvoke/tree/main).
+Before tooling around with some persistence techniques regarding LNK files, I had been putting together this reverse shell as something that I can quickly compile and use on boxes with defender in CTF challenges. It works well for this at the time of writing. Credit to both [nimplant](https://github.com/chvancooten/NimPlant/tree/main) and the [offensive Nim](https://github.com/byt3bl33d3r/OffensiveNim/tree/master/src) projects, as a good amount of the code regarding the features like injection etc., came from/edited from those projects. Indirect system calls and DInvoke-style delegate declarations were done using [nimvoke](https://github.com/nbaertsch/nimvoke/tree/main).
 
 **Options once connected:**
 + `[exit]` Exit without changing target paths
