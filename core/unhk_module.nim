@@ -6,6 +6,8 @@ from winim import NTSTATUS, NT_SUCCESS, LPVOID, HANDLE, MODULEINFO, PIMAGE_DOS_H
                   `&`, CloseHandle, FreeLibrary, GetModuleHandleA, GetModuleInformation
 import strformat 
 
+# Taken and lightly modified from https://github.com/byt3bl33d3r/OffensiveNim/blob/master/src/unhook.nim
+
 dinvokeDefine(CreateFileMappingA, "kernel32.dll", proc (hFile: HANDLE, lpFileMappingAttributes: LPSECURITY_ATTRIBUTES, flProtect: DWORD, dwMaximumSizeHigh: DWORD, dwMaximumSizeLow: DWORD, lpName: LPCSTR): HANDLE {.stdcall.})
 dinvokeDefine(MapViewOfFile, "kernel32.dll", proc (hFileMappingObject: HANDLE, dwDesiredAccess: DWORD, dwFileOffsetHigh: DWORD, dwFileOffsetLow: DWORD, dwNumberOfBytesToMap: SIZE_T): LPVOID {.stdcall.})
 
