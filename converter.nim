@@ -1,17 +1,7 @@
-#[ 
-  Converter for a raw shellcode file 
-]#
-
 import os, strformat
 import core/rc_for
 import core/util
 from base64 import encode
-
-# --- Example CLI ------------------------------------------------------------
-# Usage:
-#   nim c -d:release rc4_bytes.nim
-#   ./rc4_bytes enc keyString in.bin out.enc
-#   ./rc4_bytes dec keyString out.enc out.dec
 
 proc processShellcode(binFile: string, key: string) =
   var
@@ -36,5 +26,6 @@ when isMainModule:
   let 
     binFile   = paramStr(1)
     keyStr    = paramStr(2)
+
 
   processShellcode(binFile, keyStr)
