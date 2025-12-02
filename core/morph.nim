@@ -4,6 +4,9 @@ import std/[macros, random, times, tables, os, volatile]
   Experimenting with Nim's AST to manipulate code at compile time.
   This file exports a macro. The macro gets the AST of the code block passed to it (NimNode represnting a statement list),
   and returns a new statement list that includes the original statements, mixed with obfuscated code.
+
+  morph:
+    <operations>
 ]#
 
 var rng {.compileTime.}: Rand 
