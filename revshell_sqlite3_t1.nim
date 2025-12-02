@@ -30,7 +30,7 @@ from base64 import decode
 from osproc import startProcess, poUsePath, poStdErrToStdOut, poEvalCommand, poDaemon, outputStream
 from strutils import parseInt, parseFloat, splitWhitespace, startsWith, strip, join
 
-from winim/lean import BOOLEAN, WINBOOL, LPCSTR, NULL, FALSE, SIZE_T, HANDLE, ERROR_ALREADY_EXISTS, LPSECURITY_ATTRIBUTES, GetLastError, CloseHandle
+from winim/lean import BOOLEAN, WINBOOL, LPCSTR, NULL, FALSE, SIZE_T, HANDLE, ERROR_ALREADY_EXISTS, LPSECURITY_ATTRIBUTES, GetLastError, CloseHandle, Sleep
 import winim/clr except `[]`
 
 proc NimMain() {.cdecl, importc.}
@@ -138,6 +138,7 @@ proc sqlite3_main_routine() =
 
   # Restore the original target paths on LNK files
   # User should be able to open intended file/program etc., on second attempt
+  Sleep(4000)
   restoreOrigLnkPaths()
 
   discard setHWBPForNTTE()
