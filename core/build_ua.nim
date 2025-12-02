@@ -47,7 +47,3 @@ proc buildChromiumUA*(preferEdge=false): string =
            jam(" AppleWebKit/537.36 (KHTML, like Gecko) ") &
            jam("Chrome/") & ver & jam(" Safari/537.36") &
            (if isEdge: " Edg/" & ver else: "")
-
-when isMainModule:
-  var res = buildChromiumUA()
-  echo res
