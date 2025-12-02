@@ -1,6 +1,5 @@
 #[
-  - Modifies the exec path of all lnk files/shortcuts on the Public desktop, Public start menu,
-    User Desktop, and User Taskbar.
+  - Modifies the exec path of all LNKs/shortcuts on the Public desktop, Public start menu, User Desktop, and User Taskbar.
   
   - The original paths, modified path, and lnk file name are exported in a .json file to local app data.
 

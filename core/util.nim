@@ -1,7 +1,36 @@
+import segfaults
 from strutils import find, split
 from os import joinPath, dirExists, createDir, getEnv
 
 type WCHAR = uint16 
+
+template `debug` (ss: varargs[string, `$`]) =
+  when (defined DEBUG) and (not defined SILENT):
+    var str = ""
+    for s in ss:
+      str &= s
+    echo &"[DEBUG] ", str
+
+proc bytesToString*(b: openArray[byte]): string =
+  result = newString(b.len)
+  for i in 0..<b.len: result[i] = char(b[i])
+
+proc toBytes*(s: string): seq[byte] =
+  result = newSeq[byte](s.len)
+  for i in 0 ..< s.len:
+    result[i] = byte(s[i])
+
+proc readBin*(path: string): seq[byte] =
+  let s = readFile(path)         
+  result = newSeq[byte](s.len)
+  for i in 0 ..< s.len:
+    result[i] = byte(s[i])
+
+proc writeBin*(path: string, data: openArray[byte]) =
+  var s = newString(data.len)
+  for i in 0 ..< data.len:
+    s[i] = char(data[i])
+  writeFile(path, s)
 
 proc toString*(wchars: array[260, WCHAR]): string =
   result = ""
