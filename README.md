@@ -9,9 +9,10 @@ Some useful resources:
 - [NimDllSideload](https://github.com/byt3bl33d3r/NimDllSideload)
 
 # Compile
+```text
 nimble install ptr_math winim checksums
 nimble install https://github.com/nbaertsch/nimvoke
-
+```
 example:
 ```text
 nim c converter.nim 
