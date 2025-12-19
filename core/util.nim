@@ -4,13 +4,6 @@ from os import joinPath, dirExists, createDir, getEnv
 
 type WCHAR = uint16 
 
-template `debug` (ss: varargs[string, `$`]) =
-  when (defined DEBUG) and (not defined SILENT):
-    var str = ""
-    for s in ss:
-      str &= s
-    echo &"[DEBUG] ", str
-
 proc bytesToString*(b: openArray[byte]): string =
   result = newString(b.len)
   for i in 0..<b.len: result[i] = char(b[i])
