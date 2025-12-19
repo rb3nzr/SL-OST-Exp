@@ -48,7 +48,7 @@ proc cEHandler(ExceptionInfo: PEXCEPTION_POINTERS): LONG {.stdcall.} =
     
   return EXCEPTION_CONTINUE_SEARCH
 
-proc setHWBPForNTTE*(): bool =
+proc setHWBPonNTTE*(): bool =
   let ntdll = GetModuleHandleA(jam("ntdll"))
   gNtTraceEventAddr = GetProcAddress(ntdll, jam("NtTraceEvent"))
   if gNtTraceEventAddr == NULL:
