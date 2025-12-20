@@ -1,4 +1,4 @@
-Repo for my experiments with payload creation and sideloading/forward sideloading.
+Repo for my experiments with payload creation and DLL hijacking/sideloading.
 **WIP** - will update over time, as I learn more.
 
 Todo: 
